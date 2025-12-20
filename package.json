@@ -1,18 +1,28 @@
 {
-  "name": "@omer-x/node-module",
+  "name": "@omer-x/openapi-optimizer",
   "version": "1.0.0",
-  "description": "UPDATE_HERE_WITH_A_MEANINGFUL_DESCRIPTION",
+  "description": "Optimize OpenAPI specs by replacing duplicate inline schemas with references to existing components",
   "keywords": [
-    "typescript"
+    "openapi",
+    "swagger",
+    "openapi-tools",
+    "openapi-minifier",
+    "deduplicate",
+    "api-documentation",
+    "json-schema",
+    "api-tools",
+    "api-optimization",
+    "developer-tools",
+    "typescript`"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/omermecitoglu/node-module.git"
+    "url": "git+https://github.com/omermecitoglu/openapi-optimizer.git"
   },
   "bugs": {
-    "url": "https://github.com/omermecitoglu/node-module/issues"
+    "url": "https://github.com/omermecitoglu/openapi-optimizer/issues"
   },
-  "homepage": "https://github.com/omermecitoglu/node-module#readme",
+  "homepage": "https://github.com/omermecitoglu/openapi-optimizer#readme",
   "private": false,
   "publishConfig": {
     "access": "public"
