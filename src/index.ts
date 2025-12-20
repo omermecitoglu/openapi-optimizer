@@ -1,3 +1,4 @@
-export function exampleFunction() {
-  console.log(" This is an example function ");
-}
+import { optimizeOpenApiSpec } from "./core/optimizeOpenApiSpec";
+
+export default optimizeOpenApiSpec;
+export { optimizeOpenApiSpec };

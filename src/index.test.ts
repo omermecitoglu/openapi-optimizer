@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { exampleFunction } from "./index";
+import { optimizeOpenApiSpec } from "./index";
 
-describe("exampleFunction", () => {
+describe("optimizeOpenApiSpec", () => {
   it("should be a function", () => {
-    expect(typeof exampleFunction).toBe("function");
+    expect(typeof optimizeOpenApiSpec).toBe("function");
   });
 });
