@@ -52,8 +52,8 @@
     "dev": "tsup --watch",
     "build": "tsup"
   },
-  "dependencies": {
-    "react": "latest"
+  "peerDependencies": {
+    "@omer-x/openapi-types": "^1"
   },
   "devDependencies": {
     "@omer-x/eslint-config": "^2.2.6",
