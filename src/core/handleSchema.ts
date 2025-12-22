@@ -1,12 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
+import { omit } from "~/utils/omit";
 import type { SchemaObject } from "@omer-x/json-schema-types";
 
 export function handleSchema(schema: SchemaObject, storedSchemas: Record<string, SchemaObject>): SchemaObject {
   if ("$ref" in schema) return schema;
 
   for (const [storedSchemaName, storedSchema] of Object.entries(storedSchemas)) {
-    if (isDeepStrictEqual(schema, storedSchema)) {
+    if (isDeepStrictEqual(omit(schema, "$schema"), omit(storedSchema, "$schema"))) {
       return {
         $ref: `#/components/schemas/${storedSchemaName}`,
       };
