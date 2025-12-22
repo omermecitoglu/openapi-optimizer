@@ -69,10 +69,11 @@ describe("optimizeOpenApiSpec", () => {
 
     const output = optimizeOpenApiSpec(input);
 
-    expect(output.components?.schemas).toBeDefined();
-    expect((output.paths?.["/test"]?.get?.parameters?.[0] as ParameterObject).schema).toEqual(expect.objectContaining({
-      $ref: expect.stringMatching(/^#\/components\/schemas\/Schema[A-Z0-9]+$/),
-    }));
+    expect((output.paths?.["/test"]?.get?.parameters?.[0] as ParameterObject).schema).toEqual({
+      type: "string",
+    });
+    // Since used only once, inlined and removed from components
+    expect(output.components?.schemas).toBeUndefined();
   });
 
   it("should optimize schemas in requestBody", () => {
@@ -106,11 +107,15 @@ describe("optimizeOpenApiSpec", () => {
 
     const output = optimizeOpenApiSpec(input);
 
-    expect(output.components?.schemas).toBeDefined();
-    const schemaRef = (output.paths?.["/test"]?.post?.requestBody as RequestBodyObject).content["application/json"]?.schema;
-    expect(schemaRef).toEqual(expect.objectContaining({
-      $ref: expect.stringMatching(/^#\/components\/schemas\/Schema[A-Z0-9]+$/),
-    }));
+    const schema = (output.paths?.["/test"]?.post?.requestBody as RequestBodyObject).content["application/json"]?.schema;
+    expect(schema).toEqual({
+      type: "object",
+      properties: {
+        name: { type: "string" },
+      },
+    });
+    // Inlined since used once
+    expect(output.components?.schemas).toBeUndefined();
   });
 
   it("should optimize schemas in responses", () => {
@@ -140,11 +145,13 @@ describe("optimizeOpenApiSpec", () => {
 
     const output = optimizeOpenApiSpec(input);
 
-    expect(output.components?.schemas).toBeDefined();
-    const schemaRef = (output.paths?.["/test"]?.get?.responses?.["200"] as ResponseObject).content?.["application/json"]?.schema;
-    expect(schemaRef).toEqual(expect.objectContaining({
-      $ref: expect.stringMatching(/^#\/components\/schemas\/Schema[A-Z0-9]+$/),
-    }));
+    const schema = (output.paths?.["/test"]?.get?.responses?.["200"] as ResponseObject).content?.["application/json"]?.schema;
+    expect(schema).toEqual({
+      type: "array",
+      items: { type: "number" },
+    });
+    // Inlined
+    expect(output.components?.schemas).toBeUndefined();
   });
 
   it("should handle existing components schemas", () => {
@@ -289,9 +296,21 @@ describe("optimizeOpenApiSpec", () => {
 
     const output = optimizeOpenApiSpec(input);
 
-    expect(output.components?.schemas).toBeDefined();
-    // Should have multiple schemas extracted
-    expect(Object.keys(output.components!.schemas!)).toHaveLength(4);
+    const schema = (output.paths?.["/test"]?.post?.requestBody as RequestBodyObject).content["application/json"]?.schema;
+    expect(schema).toEqual({
+      type: "object",
+      properties: {
+        user: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            age: { type: "number" },
+          },
+        },
+      },
+    });
+    // All schemas inlined since unique
+    expect(output.components?.schemas).toBeUndefined();
   });
 
   it("should handle oneOf and anyOf", () => {
@@ -326,9 +345,18 @@ describe("optimizeOpenApiSpec", () => {
 
     const output = optimizeOpenApiSpec(input);
 
-    expect(output.components?.schemas).toBeDefined();
-    // Should extract the schemas
-    expect(Object.keys(output.components!.schemas!)).toHaveLength(4); // oneOf string, number, anyOf boolean
+    const schema = (output.paths?.["/test"]?.post?.requestBody as RequestBodyObject).content["application/json"]?.schema;
+    expect(schema).toEqual({
+      oneOf: [
+        { type: "string" },
+        { type: "number" },
+      ],
+      anyOf: [
+        { type: "boolean" },
+      ],
+    });
+    // Inlined
+    expect(output.components?.schemas).toBeUndefined();
   });
 
   it("should handle array items", () => {
@@ -361,8 +389,18 @@ describe("optimizeOpenApiSpec", () => {
 
     const output = optimizeOpenApiSpec(input);
 
-    expect(output.components?.schemas).toBeDefined();
-    expect(Object.keys(output.components!.schemas!)).toHaveLength(3); // array and object
+    const schema = (output.paths?.["/test"]?.get?.responses?.["200"] as ResponseObject).content?.["application/json"]?.schema;
+    expect(schema).toEqual({
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+        },
+      },
+    });
+    // Inlined
+    expect(output.components?.schemas).toBeUndefined();
   });
 
   it("should handle additionalProperties", () => {
@@ -394,8 +432,15 @@ describe("optimizeOpenApiSpec", () => {
 
     const output = optimizeOpenApiSpec(input);
 
-    expect(output.components?.schemas).toBeDefined();
-    expect(Object.keys(output.components!.schemas!)).toHaveLength(2);
+    const schema = (output.paths?.["/test"]?.post?.requestBody as RequestBodyObject).content["application/json"]?.schema;
+    expect(schema).toEqual({
+      type: "object",
+      additionalProperties: {
+        type: "string",
+      },
+    });
+    // Inlined
+    expect(output.components?.schemas).toBeUndefined();
   });
 
   it("should handle prefixItems", () => {
@@ -428,8 +473,16 @@ describe("optimizeOpenApiSpec", () => {
 
     const output = optimizeOpenApiSpec(input);
 
-    expect(output.components?.schemas).toBeDefined();
-    expect(Object.keys(output.components!.schemas!)).toHaveLength(3); // array, string, number
+    const schema = (output.paths?.["/test"]?.post?.requestBody as RequestBodyObject).content["application/json"]?.schema;
+    expect(schema).toEqual({
+      type: "array",
+      prefixItems: [
+        { type: "string" },
+        { type: "number" },
+      ],
+    });
+    // Inlined
+    expect(output.components?.schemas).toBeUndefined();
   });
 
   it("should handle response headers", () => {
@@ -454,11 +507,10 @@ describe("optimizeOpenApiSpec", () => {
 
     const output = optimizeOpenApiSpec(input);
 
-    expect(output.components?.schemas).toBeDefined();
     const headerSchema = ((output.paths?.["/test"]?.get?.responses?.["200"] as ResponseObject).headers?.["X-Rate-Limit"] as ParameterObject).schema;
-    expect(headerSchema).toEqual(expect.objectContaining({
-      $ref: expect.stringMatching(/^#\/components\/schemas\/Schema[A-Z0-9]+$/),
-    }));
+    expect(headerSchema).toEqual({ type: "integer" });
+    // Inlined
+    expect(output.components?.schemas).toBeUndefined();
   });
 
   it("should handle $ref in response headers", () => {
